@@ -27,8 +27,8 @@ def open_serial_port():
         window = tk.Tk()
         window.title("Zanas Z-3 Series Monitor")  # Add title to the window
 
-        global maxh;
-        maxh=0;
+        global maxh
+        maxh=0
         
         def parachute():
             ser.write(b'2')
