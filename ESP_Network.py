@@ -1,41 +1,47 @@
-import tkinter as tk
 import paho.mqtt.client as mqtt
+import time 
+# MQTT broker details
+broker = "f2c6012d6da149d1a59063387a77aa22.s2.eu.hivemq.cloud"
+port = 8883
+username = "ESP32"
+password = "ESP12345"
 
-# MQTT broker information
-broker_url = "f2c6012d6da149d1a59063387a77aa22.s2.eu.hivemq.cloud"
-broker_port = 8883
-broker_ws_port = 8884
+# MQTT topic and message
+topic = "your/topic"
+message = "Hello, HiveMQ!"
 
-# MQTT topic to publish the button press event
-topic = "button_press"
-
+# MQTT callback functions
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to MQTT broker")
+        client.subscribe(topic)
     else:
-        print("Failed to connect to MQTT broker")
+        print("Failed to connect, return code: ", rc)
 
 def on_publish(client, userdata, mid):
-    print("Button press event published to MQTT broker")
+    print("Message published")
 
-def on_button_press():
-    client = mqtt.Client()
-    client.username_pw_set(username="", password="")
-    client.on_connect = on_connect
-    client.on_publish = on_publish
-    client.tls_set()
-    client.connect(broker_url, broker_port)
+def on_disconnect(client, userdata, rc):
+    print("Disconnected from MQTT broker")
 
-    # Publish a message indicating the button press
-    client.publish(topic, "Button pressed")
+# Create MQTT client
+client = mqtt.Client()
 
-    # Disconnect from the MQTT broker
-    client.disconnect()
+# Set MQTT callback functions
+client.on_connect = on_connect
+client.on_publish = on_publish
+client.on_disconnect = on_disconnect
 
-root = tk.Tk()
+# Set MQTT username and password
+client.username_pw_set(username, password)
 
-# Create a button
-button = tk.Button(root, text="Press Me", command=on_button_press)
-button.pack()
+client.loop_start()
+client.connect(broker, port)
+while(client.is_connected() == False):
+    print("Connecting to MQTT broker...")
+    time.sleep(1)
+    client.connect(broker, port)
+client.publish(topic, message)
 
-root.mainloop()
+# Loop continuously to maintain the connection
+client.loop_stop()
